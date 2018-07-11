@@ -101,7 +101,7 @@ analytics:
 # Site Author
 author:
   name             : "Timur Hassan"
-  avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
+  avatar           : "/images/snake-oil-salesman-bw" # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio              : "Professional Data Scientist. Love to code R and learning to love Python. I reckon Machine Learning is changing the universe; what an exciting time to be alive!"
   location         : "Melbourne, Australia"
   email            :
