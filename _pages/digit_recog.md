@@ -1,7 +1,7 @@
 ---
 layout: archive
-permalink: /kaggle_digit_recog/
-title: "Kaggle Digit Recog"
+permalink: /digit_recog/
+title: "Machine Learning"
 header:
     image: "/images/snake-oil-salesman-bw.png"
 ---
