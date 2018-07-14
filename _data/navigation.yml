@@ -2,7 +2,7 @@
 main:
   - title: "About Me"
     url: /about/
-  - title: "Digit Recog"
+  - title: "Machine Learning"
     url: /digit_recog/
   # - title: "About"
   #   url: https://mmistakes.github.io/minimal-mistakes/about/
