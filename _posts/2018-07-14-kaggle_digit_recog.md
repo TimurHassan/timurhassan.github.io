@@ -6,6 +6,7 @@ header:
     image: ""
 excerpt: "Machine Learning, Neural Networks, Data Science"
 mathjax: "true"
+---
 
 # Shit
 
