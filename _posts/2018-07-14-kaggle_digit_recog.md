@@ -8,11 +8,11 @@ excerpt: "Machine Learning, Neural Networks, Data Science"
 mathjax: "true"
 ---
 
-# Shit
+# heading 1
 
-## Balls
+## heading 2
 
-### Creppe
+### heading 3
 
 Yeah man!
 - dude
