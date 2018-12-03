@@ -7,6 +7,9 @@ knit: (function(input_file, encoding) {
  output_file=file.path(dirname(input_file), out_dir, '2018-12-03-test.html'))})
 author: "Timur Hassan"
 date: "3 December 2018"
+header:
+    image: ""
+excerpt: "Machine Learning, Neural Networks, Data Science"
 output: html_document
 ---
 
