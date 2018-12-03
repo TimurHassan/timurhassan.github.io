@@ -1,10 +1,10 @@
 ---
 title: "Image Recognition "
 knit: (function(input_file, encoding) {
-  out_dir <- 'docs';
+  out_dir <- '.';
   rmarkdown::render(input_file,
  encoding=encoding,
- output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+ output_file=file.path(dirname(input_file), out_dir, '2018-12-03-test.html'))})
 author: "Timur Hassan"
 date: "3 December 2018"
 output: html_document
@@ -75,7 +75,7 @@ set.seed(crv$seed)
 tic("random forest")
 crs$rf <- randomForest::randomForest(as.factor(label) ~ .,
                                      data=crs$dataset[crs$sample, c(crs$input, crs$target)], 
-                                     ntree=2,
+                                     ntree=1,
                                      mtry=50,
                                      importance=TRUE,
                                      na.action=randomForest::na.roughfix,
