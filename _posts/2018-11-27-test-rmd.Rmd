@@ -1,12 +1,12 @@
 ---
-title: "testing"
+title: "Image Recognition "
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
   rmarkdown::render(input_file,
  encoding=encoding,
  output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
-author: "timur"
-date: "27 November 2018"
+author: "Timur Hassan"
+date: "3 December 2018"
 output: html_document
 ---
 
@@ -14,22 +14,152 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
+rm(list=ls())
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# Load libraries
+pacman::p_load(rattle,magrittr,caret,reader,dplyr,ggplot2,tidyr,data.table,R.utils,tidyverse,randomForest)
+devtools::install_github("collectivemedia/tictoc")
+library("tictoc")
 
-```{r cars}
-summary(cars)
+# Set working directory
+setwd(filePath("C:/Users/",Sys.getenv("USERNAME"),"Documents","image_recog"))
+
+# RECEIVE
+train <- read_csv("./data_in/train.csv") # load data
+test  <- read_csv("./data_in/test.csv") # load data
+
+# PREPARE
+# Set up modelling parameters and train/validate/test sets
+
+building <- TRUE
+scoring  <- ! building
+crv$seed <- 42 
+crs$dataset <- train
+
+#============================================================
+# Build the train/validate/test datasets.
+# nobs=42000 train=29399 validate=6300 test=6301
+
+set.seed(crv$seed)
+
+crs$nobs     <- nrow(crs$dataset)
+crs$train    <- crs$sample <- sample(crs$nobs, 0.7*crs$nobs)
+crs$validate <- sample(setdiff(seq_len(crs$nobs), crs$train), 0.15*crs$nobs)
+crs$test     <- setdiff(setdiff(seq_len(crs$nobs), crs$train), crs$validate)
+
+# The following variable selections have been noted.
+crs$input     <- names(train)[grepl("pixel",names(train))]
+
+crs$numeric   <- crs$input
+
+crs$categoric <- NULL
+
+crs$target    <- "label"
+crs$risk      <- NULL
+crs$ident     <- NULL
+
+# Columns with 1 unique value are stored in the "ignore" slot
+crs$ignore    <- names(which(sapply(train,sum)==0))
+
+crs$weights   <- NULL
+
+# MODEL
+
+#============================================================
+# Build a Random Forest model
+
+set.seed(crv$seed)
+
+tic("random forest")
+crs$rf <- randomForest::randomForest(as.factor(label) ~ .,
+                                     data=crs$dataset[crs$sample, c(crs$input, crs$target)], 
+                                     ntree=2,
+                                     mtry=50,
+                                     importance=TRUE,
+                                     na.action=randomForest::na.roughfix,
+                                     replace=FALSE)
+toc()
+# Generate textual output of the 'Random Forest' model.
+
+crs$rf
+
+# List the importance of the variables.
+
+rn <- round(randomForest::importance(crs$rf), 2)
+# rn[order(rn[,3], decreasing=TRUE),]
+
+
+# Score data
+# Assign the R dataset to be used as the test set.
+# HERE!!! training set passed into testset data
+
+crs$testset <- train
+
+# Obtain probability scores for the Random Forest model on x.
+
+crs$pr <- predict(crs$rf, newdata=na.omit(crs$testset))
+test.scored <- predict(crs$rf, newdata = test)
+
+# Create Submission file in the format required
+test.scored <- as.data.frame(test.scored)
+test.scored$ImageId <- 1:28000
+test.scored<-test.scored[,c(2,1)]
+names(test.scored) <- c("ImageId","Label")
+# write.csv(test.scored,"./submissions/submission.rf.csv",row.names = F)
+
+# Extract the relevant variables from the dataset.
+sdata <- crs$testset
+
+# Combine data.
+x.scored <- cbind(sdata, crs$pr)
+
+# convert factors to numeric
+x.scored$rf <- as.numeric(x.scored$`crs$pr`)-1
+x.scored$`crs$pr` <- NULL
+
+
+x.scored$label.rf <- 10*x.scored$label+x.scored$rf
+
+
+############## start tidy analysis
+# Select data where predicted value is not equal to the correct value (rf != label)
+x.errors <- x.scored[x.scored$rf != x.scored$label,]
+
+
+# which numbers are hardest to identify
+freq.all <- as.data.frame(table(train$label))
+freq.err <- as.data.frame(table(x.errors$label))
+freq <- data.table(merge(freq.all,freq.err,by="Var1"))
+freq[ , err.rate.x := Freq.x / sum(Freq.x), by = "" ]
+freq[ , err.rate.y := Freq.y / sum(Freq.y), by = "" ]
+freq[,relative.err.rate := err.rate.y/err.rate.x,]
+
+# Have a look at the error rate per digit
+freq
+
+x.errors$label.rf <- 10*x.errors$label+x.errors$rf
+
+# look at a specific case
+x.errors.specific <- x.errors[x.errors$label==6,]
+
+
+pixels_gathered.scored <- x.errors.specific %>%
+  head(9) %>%
+  mutate(instance = row_number()) %>%
+  gather(pixel, value, -label.rf, -instance) %>%
+  tidyr::extract(pixel, "pixel", "(\\d+)", convert = TRUE) %>%
+  mutate(pixel = pixel - 2,
+         x = pixel %% 28,
+         y = 28 - pixel %/% 28)
+
+theme_set(theme_light())
+
+pixels_gathered.scored %>%
+  filter(instance <= 9) %>%
+  ggplot(aes(x, y, fill = value)) +
+  geom_tile() +
+  facet_wrap(~ instance + label.rf)
+
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
